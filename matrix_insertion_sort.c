@@ -20,10 +20,40 @@
  * - NO cambies la firma de sort_matrix().
  */
 
+
+// Intercambia las columnas c1 y c2 de la fila "row" hacia abajo
+void swap_columns(int **matrix, int row, int c1, int c2, int n) {
+    for (int k = row; k < n; k++) { //Desde el i-ésimo renglón hasta el final de la matriz
+        int temp = matrix[k][c1]; //Intercambiamos los elementos de las columnas c1 y c2, para cada k desde i hasta n-1
+        matrix[k][c1] = matrix[k][c2];
+        matrix[k][c2] = temp;
+    }
+}
+
+// Se aplica quicksort a cada renglón de la matriz enviado desde sort_matrix
+void quicksort_row(int **matrix, int row, int left, int right, int n) {
+    int pivot = matrix[row][(left + right) / 2]; //El pivote es el elemento del renglon i con índice medio
+    int l = left, r = right; //Necesitamos una copia de left y right para no perder su valor original, pues l y r se van a modificar
+
+    while (l <= r) {
+        while (matrix[row][l] < pivot) l++; //Buscamos el primer elemento mayor o igual al pivote
+        while (matrix[row][r] > pivot) r--; //BUscamos el ultimo elemento menor o igual al pivote
+
+        if (l <= r) { //Si l es menor o igual a r, significa que hay elementos fuera de lugar
+            swap_columns(matrix, row, l, r, n); //Llamamos a la función que intercambia las columnas l y r desde el renglon i hacia abajo
+            l++; //Avanzamos l y retrocedemos r para seguir buscando elementos fuera de lugar
+            r--;
+        }
+    }
+
+    if (left < r) quicksort_row(matrix, row, left, r, n); //Si al terminar el ciclo while, left es menor que r, significa que hay elementos a la izquierda del pivote que deben ordenarse, por lo tanto mandamos solo esa sección a ordenarse
+    if (l < right) quicksort_row(matrix, row, l, right, n); //Si al terminar el ciclo while, l es menor que right, significa que hay elementos a la derecha del pivote que deben ordenarse
+}
+
 void sort_matrix(int **matrix, int n) {
-    // TODO: Implementa aquí el algoritmo.
-    // Necesitarás el método de inserción,
-    // pero recuerda aplicar la regla de mover toda la columna.
+    for (int i = 0; i < n; i++) {
+        quicksort_row(matrix, i, 0, n - 1, n); //Manda ordenar cada i renglón
+    }
 }
 
 int main() {
