@@ -20,36 +20,44 @@
  * - NO cambies la firma de sort_matrix().
  */
 
-void sort_matrix(int **matrix, int n) {
-    // TODO: Implementa aquí el algoritmo.
-    // Necesitarás el método de inserción,
-    // pero recuerda aplicar la regla de mover toda la columna.
-    int sorted = 1;
-    do{
-        sorted = 1;
-        for(int i = 0; i<n; i++){ //renglones
-            for(int j = 0; j<n-1; j++){ //columnas
-                if(matrix[i][j] > matrix[i][j+1]){ //Si el elemento de i,j es mayor que el que tiene a su derecha, los intercambia
-                    sorted = 0;
-                    int temp = matrix[i][j];
-                    matrix[i][j] = matrix[i][j+1];
-                    matrix[i][j+1] = temp;
-                    for(int k=i+1; k<n; k++){ //Como se cambiaron los elementos de i, j e i, j+1, se tienen que intercambiar todos los que tienen por debajo. k es i+1 porque es el elemento que está directamente abajo del elemento original intercambiado, y se hará para todos los que estén debajo.
-                        int temp = matrix[k][j];
-                        matrix[k][j] = matrix[k][j+1];
-                        matrix[k][j+1] = temp;
-                    }
-                }
-            }
-        }
-        //El do while se usa pues se intercambia por pares solamente, por lo tanto, hasta que la matriz esté totalmente ordenada (cada elemento i,j es menor o igual a i, j+1) se sale del ciclo.
-    }while(!sorted);
 
-    //Si bien sé que se puede optimizar, esta es la solución brute force que hice con el poco tiempo que tuve.
+// Intercambia las columnas c1 y c2 de la fila "row" hacia abajo
+void swap_columns(int **matrix, int row, int c1, int c2, int n) {
+    for (int k = row; k < n; k++) { //Desde el i-ésimo renglón hasta el final de la matriz
+        int temp = matrix[k][c1]; //Intercambiamos los elementos de las columnas c1 y c2, para cada k desde i hasta n-1
+        matrix[k][c1] = matrix[k][c2];
+        matrix[k][c2] = temp;
+    }
+}
+
+// Se aplica quicksort a cada renglón de la matriz enviado desde sort_matrix
+void quicksort_row(int **matrix, int row, int left, int right, int n) {
+    int pivot = matrix[row][(left + right) / 2]; //El pivote es el elemento del renglon i con índice medio
+    int l = left, r = right; //Necesitamos una copia de left y right para no perder su valor original, pues l y r se van a modificar
+
+    while (l <= r) {
+        while (matrix[row][l] < pivot) l++; //Buscamos el primer elemento mayor o igual al pivote
+        while (matrix[row][r] > pivot) r--; //BUscamos el ultimo elemento menor o igual al pivote
+
+        if (l <= r) { //Si l es menor o igual a r, significa que hay elementos fuera de lugar
+            swap_columns(matrix, row, l, r, n); //Llamamos a la función que intercambia las columnas l y r desde el renglon i hacia abajo
+            l++; //Avanzamos l y retrocedemos r para seguir buscando elementos fuera de lugar
+            r--;
+        }
+    }
+
+    if (left < r) quicksort_row(matrix, row, left, r, n); //Si al terminar el ciclo while, left es menor que r, significa que hay elementos a la izquierda del pivote que deben ordenarse, por lo tanto mandamos solo esa sección a ordenarse
+    if (l < right) quicksort_row(matrix, row, l, right, n); //Si al terminar el ciclo while, l es menor que right, significa que hay elementos a la derecha del pivote que deben ordenarse
+}
+
+void sort_matrix(int **matrix, int n) {
+    for (int i = 0; i < n; i++) {
+        quicksort_row(matrix, i, 0, n - 1, n); //Manda ordenar cada i renglón
+    }
 }
 
 int main() {
-    int n = 4;
+    int n = 3;
     // Reserva dinámica de la matriz
     int **matrix = (int **)malloc(n * sizeof(int *));
     for (int i = 0; i < n; i++) {
@@ -57,11 +65,10 @@ int main() {
     }
 
     // Ejemplo de entrada
-    int ejemplo[4][4] = {
-        {9, 2, 7, 5},
-        {4, 6, 3, 0},
-        {5, 1, 8, 7},
-        {9, 1, 8, 5}
+    int ejemplo[3][3] = {
+        {4, 7, 2},
+        {9, 5, 6},
+        {8, 1, 3}
     };
 
     // Copiar ejemplo a la matriz dinámica
